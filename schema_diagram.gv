@@ -1,0 +1,167 @@
+// Paper-Trading Exchange — Relational Schema Diagram (12 tables), aligned with er_diagram_final.gv
+// Course: CS F212 Database Systems, BITS Pilani Hyderabad
+
+digraph RelationalSchema {
+    graph [rankdir=LR, nodesep=0.45, ranksep=1.4, fontname="Helvetica", fontsize=10,
+           bgcolor="white", pad=0.5, splines=spline, labelloc=b, labeljust=l,
+           label=<<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="2" CELLPADDING="3" BGCOLOR="#FEFCE8">
+        <TR><TD COLSPAN="2"><B>LEGEND</B></TD></TR>
+        <TR><TD BGCOLOR="#1E3A8A" WIDTH="26"> </TD><TD ALIGN="LEFT">Table from a strong entity (or M:N relationship)</TD></TR>
+        <TR><TD BGCOLOR="#D97706" WIDTH="26"> </TD><TD ALIGN="LEFT">Weak entity table (PK = owner's PK + partial key)</TD></TR>
+        <TR><TD BGCOLOR="#2563EB" WIDTH="26"> </TD><TD ALIGN="LEFT">Subclass table (PK is also FK to INSTRUMENT)</TD></TR>
+        <TR><TD ALIGN="LEFT"><B>PK / FK / UQ</B></TD><TD ALIGN="LEFT">Primary key (underlined) / foreign key / unique</TD></TR>
+        <TR><TD ALIGN="LEFT">solid arrow</TD><TD ALIGN="LEFT">FK column to the PK it references</TD></TR>
+        <TR><TD ALIGN="LEFT">dashed arrow</TD><TD ALIGN="LEFT">ISA link: subclass PK references INSTRUMENT</TD></TR>
+        <TR><TD ALIGN="LEFT">NOT NULL / NULL</TD><TD ALIGN="LEFT">Total / partial participation in the ER</TD></TR>
+        <TR><TD COLSPAN="2" ALIGN="LEFT"><B>Constraints not drawn as arrows</B></TD></TR>
+        <TR><TD COLSPAN="2" ALIGN="LEFT">1. Instrument_type decides BOND or OPTION (disjoint, partial specialization)</TD></TR>
+        <TR><TD COLSPAN="2" ALIGN="LEFT">2. ORDER_FILL.Order_id must be the Buy_order_id or Sell_order_id of its TRADE</TD></TR>
+        <TR><TD COLSPAN="2" ALIGN="LEFT">3. CASH_LEDGER: Trade_id and Instrument_id are never both non-NULL</TD></TR>
+    </TABLE>>];
+    node [fontname="Helvetica", fontsize=9, shape=plaintext];
+    edge [fontname="Helvetica", fontsize=8, color="#475569", arrowhead=normal, arrowsize=0.7];
+
+    USER [label=<<TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#F1F5F9">
+        <TR><TD COLSPAN="3" BGCOLOR="#1E3A8A"><FONT COLOR="white"><B>USER</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_User_id"><B>PK</B></TD><TD ALIGN="LEFT"><U>User_id</U></TD><TD ALIGN="LEFT" PORT="o_User_id">INTEGER</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Email">UQ</TD><TD ALIGN="LEFT">Email</TD><TD ALIGN="LEFT" PORT="o_Email">VARCHAR</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Name"></TD><TD ALIGN="LEFT">Name</TD><TD ALIGN="LEFT" PORT="o_Name">VARCHAR</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Password_hash"></TD><TD ALIGN="LEFT">Password_hash</TD><TD ALIGN="LEFT" PORT="o_Password_hash">VARCHAR</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Role"></TD><TD ALIGN="LEFT">Role</TD><TD ALIGN="LEFT" PORT="o_Role">VARCHAR</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Created_at"></TD><TD ALIGN="LEFT">Created_at</TD><TD ALIGN="LEFT" PORT="o_Created_at">TIMESTAMP</TD></TR>
+    </TABLE>>];
+
+    ACCOUNT [label=<<TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#F1F5F9">
+        <TR><TD COLSPAN="3" BGCOLOR="#1E3A8A"><FONT COLOR="white"><B>ACCOUNT</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Account_id"><B>PK</B></TD><TD ALIGN="LEFT"><U>Account_id</U></TD><TD ALIGN="LEFT" PORT="o_Account_id">INTEGER</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_User_id"><B>FK</B></TD><TD ALIGN="LEFT">User_id</TD><TD ALIGN="LEFT" PORT="o_User_id">INTEGER NOT NULL</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Cash_balance"></TD><TD ALIGN="LEFT">Cash_balance</TD><TD ALIGN="LEFT" PORT="o_Cash_balance">NUMERIC(15,2)</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Is_house"></TD><TD ALIGN="LEFT">Is_house</TD><TD ALIGN="LEFT" PORT="o_Is_house">BOOLEAN</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Created_at"></TD><TD ALIGN="LEFT">Created_at</TD><TD ALIGN="LEFT" PORT="o_Created_at">TIMESTAMP</TD></TR>
+    </TABLE>>];
+
+    INSTRUMENT [label=<<TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#F1F5F9">
+        <TR><TD COLSPAN="3" BGCOLOR="#1E3A8A"><FONT COLOR="white"><B>INSTRUMENT</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Instrument_id"><B>PK</B></TD><TD ALIGN="LEFT"><U>Instrument_id</U></TD><TD ALIGN="LEFT" PORT="o_Instrument_id">INTEGER</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Symbol">UQ</TD><TD ALIGN="LEFT">Symbol</TD><TD ALIGN="LEFT" PORT="o_Symbol">VARCHAR</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Name"></TD><TD ALIGN="LEFT">Name</TD><TD ALIGN="LEFT" PORT="o_Name">VARCHAR</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Instrument_type"></TD><TD ALIGN="LEFT">Instrument_type</TD><TD ALIGN="LEFT" PORT="o_Instrument_type">VARCHAR</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Sector"></TD><TD ALIGN="LEFT">Sector</TD><TD ALIGN="LEFT" PORT="o_Sector">VARCHAR</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Multiplier"></TD><TD ALIGN="LEFT">Multiplier</TD><TD ALIGN="LEFT" PORT="o_Multiplier">NUMERIC</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Tick_size"></TD><TD ALIGN="LEFT">Tick_size</TD><TD ALIGN="LEFT" PORT="o_Tick_size">NUMERIC</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Lot_size"></TD><TD ALIGN="LEFT">Lot_size</TD><TD ALIGN="LEFT" PORT="o_Lot_size">INTEGER</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Status"></TD><TD ALIGN="LEFT">Status</TD><TD ALIGN="LEFT" PORT="o_Status">VARCHAR</TD></TR>
+    </TABLE>>];
+
+    BOND [label=<<TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#F8FAFC">
+        <TR><TD COLSPAN="3" BGCOLOR="#2563EB"><FONT COLOR="white"><B>BOND (Subclass)</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Instrument_id"><B>PK, FK</B></TD><TD ALIGN="LEFT"><U>Instrument_id</U></TD><TD ALIGN="LEFT" PORT="o_Instrument_id">INTEGER</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Face_value"></TD><TD ALIGN="LEFT">Face_value</TD><TD ALIGN="LEFT" PORT="o_Face_value">NUMERIC</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Coupon_rate"></TD><TD ALIGN="LEFT">Coupon_rate</TD><TD ALIGN="LEFT" PORT="o_Coupon_rate">NUMERIC</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Coupon_frequency"></TD><TD ALIGN="LEFT">Coupon_frequency</TD><TD ALIGN="LEFT" PORT="o_Coupon_frequency">INTEGER</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Issue_date"></TD><TD ALIGN="LEFT">Issue_date</TD><TD ALIGN="LEFT" PORT="o_Issue_date">DATE</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Maturity_date"></TD><TD ALIGN="LEFT">Maturity_date</TD><TD ALIGN="LEFT" PORT="o_Maturity_date">DATE</TD></TR>
+    </TABLE>>];
+
+    OPTION [label=<<TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#F8FAFC">
+        <TR><TD COLSPAN="3" BGCOLOR="#2563EB"><FONT COLOR="white"><B>OPTION (Subclass)</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Instrument_id"><B>PK, FK</B></TD><TD ALIGN="LEFT"><U>Instrument_id</U></TD><TD ALIGN="LEFT" PORT="o_Instrument_id">INTEGER</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Underlying_id"><B>FK</B></TD><TD ALIGN="LEFT">Underlying_id</TD><TD ALIGN="LEFT" PORT="o_Underlying_id">INTEGER NOT NULL</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Strike"></TD><TD ALIGN="LEFT">Strike</TD><TD ALIGN="LEFT" PORT="o_Strike">NUMERIC</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Expiry"></TD><TD ALIGN="LEFT">Expiry</TD><TD ALIGN="LEFT" PORT="o_Expiry">DATE</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Option_type"></TD><TD ALIGN="LEFT">Option_type</TD><TD ALIGN="LEFT" PORT="o_Option_type">VARCHAR</TD></TR>
+    </TABLE>>];
+
+    ORDER [label=<<TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#F1F5F9">
+        <TR><TD COLSPAN="3" BGCOLOR="#1E3A8A"><FONT COLOR="white"><B>ORDER</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Order_id"><B>PK</B></TD><TD ALIGN="LEFT"><U>Order_id</U></TD><TD ALIGN="LEFT" PORT="o_Order_id">INTEGER</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Account_id"><B>FK</B></TD><TD ALIGN="LEFT">Account_id</TD><TD ALIGN="LEFT" PORT="o_Account_id">INTEGER NOT NULL</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Instrument_id"><B>FK</B></TD><TD ALIGN="LEFT">Instrument_id</TD><TD ALIGN="LEFT" PORT="o_Instrument_id">INTEGER NOT NULL</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Side"></TD><TD ALIGN="LEFT">Side</TD><TD ALIGN="LEFT" PORT="o_Side">VARCHAR</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Price"></TD><TD ALIGN="LEFT">Price</TD><TD ALIGN="LEFT" PORT="o_Price">NUMERIC</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Qty"></TD><TD ALIGN="LEFT">Qty</TD><TD ALIGN="LEFT" PORT="o_Qty">NUMERIC</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Filled_qty"></TD><TD ALIGN="LEFT">Filled_qty</TD><TD ALIGN="LEFT" PORT="o_Filled_qty">NUMERIC</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Status"></TD><TD ALIGN="LEFT">Status</TD><TD ALIGN="LEFT" PORT="o_Status">VARCHAR</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Created_at"></TD><TD ALIGN="LEFT">Created_at</TD><TD ALIGN="LEFT" PORT="o_Created_at">TIMESTAMP</TD></TR>
+    </TABLE>>];
+
+    TRADE [label=<<TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#F1F5F9">
+        <TR><TD COLSPAN="3" BGCOLOR="#1E3A8A"><FONT COLOR="white"><B>TRADE</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Trade_id"><B>PK</B></TD><TD ALIGN="LEFT"><U>Trade_id</U></TD><TD ALIGN="LEFT" PORT="o_Trade_id">INTEGER</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Buy_order_id"><B>FK</B></TD><TD ALIGN="LEFT">Buy_order_id</TD><TD ALIGN="LEFT" PORT="o_Buy_order_id">INTEGER NOT NULL</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Sell_order_id"><B>FK</B></TD><TD ALIGN="LEFT">Sell_order_id</TD><TD ALIGN="LEFT" PORT="o_Sell_order_id">INTEGER NOT NULL</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Price"></TD><TD ALIGN="LEFT">Price</TD><TD ALIGN="LEFT" PORT="o_Price">NUMERIC</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Qty"></TD><TD ALIGN="LEFT">Qty</TD><TD ALIGN="LEFT" PORT="o_Qty">NUMERIC</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Executed_at"></TD><TD ALIGN="LEFT">Executed_at</TD><TD ALIGN="LEFT" PORT="o_Executed_at">TIMESTAMP</TD></TR>
+    </TABLE>>];
+
+    ORDER_FILL [label=<<TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#FEF3C7">
+        <TR><TD COLSPAN="3" BGCOLOR="#D97706"><FONT COLOR="white"><B>ORDER_FILL (Weak)</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Order_id"><B>PK, FK</B></TD><TD ALIGN="LEFT"><U>Order_id</U></TD><TD ALIGN="LEFT" PORT="o_Order_id">INTEGER</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Fill_seq"><B>PK</B></TD><TD ALIGN="LEFT"><U>Fill_seq</U></TD><TD ALIGN="LEFT" PORT="o_Fill_seq">INTEGER</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Trade_id"><B>FK</B></TD><TD ALIGN="LEFT">Trade_id</TD><TD ALIGN="LEFT" PORT="o_Trade_id">INTEGER NOT NULL</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Qty"></TD><TD ALIGN="LEFT">Qty</TD><TD ALIGN="LEFT" PORT="o_Qty">NUMERIC</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Price"></TD><TD ALIGN="LEFT">Price</TD><TD ALIGN="LEFT" PORT="o_Price">NUMERIC</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Filled_at"></TD><TD ALIGN="LEFT">Filled_at</TD><TD ALIGN="LEFT" PORT="o_Filled_at">TIMESTAMP</TD></TR>
+    </TABLE>>];
+
+    POSITION [label=<<TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#F1F5F9">
+        <TR><TD COLSPAN="3" BGCOLOR="#1E3A8A"><FONT COLOR="white"><B>POSITION (M:N, from HOLDS)</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Account_id"><B>PK, FK</B></TD><TD ALIGN="LEFT"><U>Account_id</U></TD><TD ALIGN="LEFT" PORT="o_Account_id">INTEGER</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Instrument_id"><B>PK, FK</B></TD><TD ALIGN="LEFT"><U>Instrument_id</U></TD><TD ALIGN="LEFT" PORT="o_Instrument_id">INTEGER</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Qty"></TD><TD ALIGN="LEFT">Qty</TD><TD ALIGN="LEFT" PORT="o_Qty">NUMERIC</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Avg_cost"></TD><TD ALIGN="LEFT">Avg_cost</TD><TD ALIGN="LEFT" PORT="o_Avg_cost">NUMERIC</TD></TR>
+    </TABLE>>];
+
+    PRICE_BAR [label=<<TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#FEF3C7">
+        <TR><TD COLSPAN="3" BGCOLOR="#D97706"><FONT COLOR="white"><B>PRICE_BAR (Weak)</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Instrument_id"><B>PK, FK</B></TD><TD ALIGN="LEFT"><U>Instrument_id</U></TD><TD ALIGN="LEFT" PORT="o_Instrument_id">INTEGER</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Trade_date"><B>PK</B></TD><TD ALIGN="LEFT"><U>Trade_date</U></TD><TD ALIGN="LEFT" PORT="o_Trade_date">DATE</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Open"></TD><TD ALIGN="LEFT">Open</TD><TD ALIGN="LEFT" PORT="o_Open">NUMERIC</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_High"></TD><TD ALIGN="LEFT">High</TD><TD ALIGN="LEFT" PORT="o_High">NUMERIC</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Low"></TD><TD ALIGN="LEFT">Low</TD><TD ALIGN="LEFT" PORT="o_Low">NUMERIC</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Close"></TD><TD ALIGN="LEFT">Close</TD><TD ALIGN="LEFT" PORT="o_Close">NUMERIC</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Volume"></TD><TD ALIGN="LEFT">Volume</TD><TD ALIGN="LEFT" PORT="o_Volume">BIGINT</TD></TR>
+    </TABLE>>];
+
+    CASH_LEDGER [label=<<TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#F1F5F9">
+        <TR><TD COLSPAN="3" BGCOLOR="#1E3A8A"><FONT COLOR="white"><B>CASH_LEDGER</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Ledger_id"><B>PK</B></TD><TD ALIGN="LEFT"><U>Ledger_id</U></TD><TD ALIGN="LEFT" PORT="o_Ledger_id">INTEGER</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Account_id"><B>FK</B></TD><TD ALIGN="LEFT">Account_id</TD><TD ALIGN="LEFT" PORT="o_Account_id">INTEGER NOT NULL</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Trade_id"><B>FK</B></TD><TD ALIGN="LEFT">Trade_id</TD><TD ALIGN="LEFT" PORT="o_Trade_id">INTEGER NULL</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Instrument_id"><B>FK</B></TD><TD ALIGN="LEFT">Instrument_id</TD><TD ALIGN="LEFT" PORT="o_Instrument_id">INTEGER NULL</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Entry_type"></TD><TD ALIGN="LEFT">Entry_type</TD><TD ALIGN="LEFT" PORT="o_Entry_type">VARCHAR</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Amount"></TD><TD ALIGN="LEFT">Amount</TD><TD ALIGN="LEFT" PORT="o_Amount">NUMERIC</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Value_date"></TD><TD ALIGN="LEFT">Value_date</TD><TD ALIGN="LEFT" PORT="o_Value_date">DATE</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Created_at"></TD><TD ALIGN="LEFT">Created_at</TD><TD ALIGN="LEFT" PORT="o_Created_at">TIMESTAMP</TD></TR>
+    </TABLE>>];
+
+    AUDIT_LOG [label=<<TABLE BORDER="1" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#F3F4F6">
+        <TR><TD COLSPAN="3" BGCOLOR="#475569"><FONT COLOR="white"><B>AUDIT_LOG</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Log_id"><B>PK</B></TD><TD ALIGN="LEFT"><U>Log_id</U></TD><TD ALIGN="LEFT" PORT="o_Log_id">BIGINT</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Table_name"></TD><TD ALIGN="LEFT">Table_name</TD><TD ALIGN="LEFT" PORT="o_Table_name">VARCHAR</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Row_id"></TD><TD ALIGN="LEFT">Row_id</TD><TD ALIGN="LEFT" PORT="o_Row_id">BIGINT</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Action"></TD><TD ALIGN="LEFT">Action</TD><TD ALIGN="LEFT" PORT="o_Action">VARCHAR</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Old_values"></TD><TD ALIGN="LEFT">Old_values</TD><TD ALIGN="LEFT" PORT="o_Old_values">JSON</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_New_values"></TD><TD ALIGN="LEFT">New_values</TD><TD ALIGN="LEFT" PORT="o_New_values">JSON</TD></TR>
+        <TR><TD ALIGN="LEFT" PORT="i_Changed_at"></TD><TD ALIGN="LEFT">Changed_at</TD><TD ALIGN="LEFT" PORT="o_Changed_at">TIMESTAMP</TD></TR>
+    </TABLE>>];
+
+    // FOREIGN KEYS (arrow leaves the FK column and lands on the referenced PK)
+    ACCOUNT:o_User_id:e -> USER:i_User_id:w;
+    ORDER:o_Account_id:e -> ACCOUNT:i_Account_id:w;
+    ORDER:o_Instrument_id:e -> INSTRUMENT:i_Instrument_id:w;
+    TRADE:o_Buy_order_id:e -> ORDER:i_Order_id:w;
+    TRADE:o_Sell_order_id:e -> ORDER:i_Order_id:w;
+    ORDER_FILL:o_Order_id:e -> ORDER:i_Order_id:w;
+    ORDER_FILL:o_Trade_id:e -> TRADE:i_Trade_id:w;
+    POSITION:o_Account_id:e -> ACCOUNT:i_Account_id:w;
+    POSITION:o_Instrument_id:e -> INSTRUMENT:i_Instrument_id:w;
+    PRICE_BAR:o_Instrument_id:e -> INSTRUMENT:i_Instrument_id:w;
+    BOND:o_Instrument_id:e -> INSTRUMENT:i_Instrument_id:w [style=dashed, label="ISA"];
+    OPTION:o_Instrument_id:e -> INSTRUMENT:i_Instrument_id:w [style=dashed, label="ISA"];
+    OPTION:o_Underlying_id:e -> INSTRUMENT:i_Instrument_id:w;
+    CASH_LEDGER:o_Account_id:e -> ACCOUNT:i_Account_id:w;
+    CASH_LEDGER:o_Trade_id:e -> TRADE:i_Trade_id:w;
+    CASH_LEDGER:o_Instrument_id:e -> INSTRUMENT:i_Instrument_id:w;
+}

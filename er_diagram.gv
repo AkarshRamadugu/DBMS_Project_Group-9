@@ -1,0 +1,354 @@
+// Paper-Trading Exchange — Chen ER/EER Diagram (FINAL: full content + clean rendering)
+// Course: CS F212 Database Systems, BITS Pilani Hyderabad
+// Notation: Elmasri & Navathe 7th ed., Chen notation
+//
+// Changes   : + CONCERNS (INSTRUMENT 1:N CASH_LEDGER, matches CASH_LEDGER.Instrument_id in the report);
+//             Cash_balance, Filled_qty, HOLDS.Qty, HOLDS.Avg_cost drawn as derived (dashed) attributes
+// Content   : every attribute, cardinality and participation constraint of er_diagram.gv
+//             (+ total participation of TRADE in BUY_SIDE / SELL_SIDE)
+// Rendering : v4 approach (splines=spline, head/tail labels, "black:invis:black" double lines,
+//             native-node legend). Partial key = oval with DASHED UNDERLINE (E&N standard),
+//             so a dashed oval is no longer ambiguous.
+//
+// Total participation  = double line  -> color="black:invis:black", penwidth=1.5
+// Partial participation = single line
+
+graph ER {
+    graph [
+        rankdir=TB,
+        nodesep=0.5,
+        ranksep=0.9,
+        fontname="Helvetica",
+        fontsize=10,
+        bgcolor="white",
+        pad=0.4,
+        splines=spline
+    ];
+
+    node [fontname="Helvetica", fontsize=10, color="black", fontcolor="black"];
+    edge [fontname="Helvetica", fontsize=10, color="black", labeldistance=2.2];
+
+    // ============================================================
+    // ENTITY TYPES
+    // ============================================================
+
+    // Strong entities
+    USER        [label="USER",        shape=box, style=bold, width=1.3, height=0.45];
+    ACCOUNT     [label="ACCOUNT",     shape=box, style=bold, width=1.3, height=0.45];
+    INSTRUMENT  [label="INSTRUMENT",  shape=box, style=bold, width=1.5, height=0.45];
+    BOND        [label="BOND",        shape=box, style=bold, width=1.2, height=0.45];
+    OPTION      [label="OPTION",      shape=box, style=bold, width=1.2, height=0.45];
+    ORDER       [label="ORDER",       shape=box, style=bold, width=1.3, height=0.45];
+    TRADE       [label="TRADE",       shape=box, style=bold, width=1.3, height=0.45];
+    CASH_LEDGER [label="CASH_LEDGER", shape=box, style=bold, width=1.5, height=0.45];
+    AUDIT_LOG   [label="AUDIT_LOG",   shape=box, style=bold, width=1.3, height=0.45];
+
+    // Weak entities (double rectangle)
+    PRICE_BAR   [label="PRICE_BAR",   shape=box, peripheries=2, style=bold, width=1.4, height=0.45];
+    ORDER_FILL  [label="ORDER_FILL",  shape=box, peripheries=2, style=bold, width=1.4, height=0.45];
+
+    // ============================================================
+    // ATTRIBUTES
+    // ============================================================
+
+    // --- USER ---
+    user_id      [label=<<u>User_id</u>>, shape=ellipse];
+    user_name    [label="Name",          shape=ellipse];
+    user_email   [label="Email",         shape=ellipse];
+    user_pwd     [label="Password_hash", shape=ellipse];
+    user_role    [label="Role",          shape=ellipse];
+    user_created [label="Created_at",    shape=ellipse];
+    USER -- user_id;
+    USER -- user_name;
+    USER -- user_email;
+    USER -- user_pwd;
+    USER -- user_role;
+    USER -- user_created;
+
+    // --- ACCOUNT ---
+    acc_id      [label=<<u>Account_id</u>>, shape=ellipse];
+    acc_cash    [label="Cash_balance",      shape=ellipse, style=dashed];
+    acc_house   [label="Is_house",          shape=ellipse];
+    acc_created [label="Created_at",        shape=ellipse];
+    ACCOUNT -- acc_id;
+    ACCOUNT -- acc_cash;
+    ACCOUNT -- acc_house;
+    ACCOUNT -- acc_created;
+
+    // --- INSTRUMENT ---
+    inst_id     [label=<<u>Instrument_id</u>>, shape=ellipse];
+    inst_sym    [label="Symbol",          shape=ellipse];
+    inst_name   [label="Name",            shape=ellipse];
+    inst_type   [label="Instrument_type", shape=ellipse];
+    inst_sector [label="Sector",          shape=ellipse];
+    inst_mult   [label="Multiplier",      shape=ellipse];
+    inst_tick   [label="Tick_size",       shape=ellipse];
+    inst_lot    [label="Lot_size",        shape=ellipse];
+    inst_status [label="Status",          shape=ellipse];
+    INSTRUMENT -- inst_id;
+    INSTRUMENT -- inst_sym;
+    INSTRUMENT -- inst_name;
+    INSTRUMENT -- inst_type;
+    INSTRUMENT -- inst_sector;
+    INSTRUMENT -- inst_mult;
+    INSTRUMENT -- inst_tick;
+    INSTRUMENT -- inst_lot;
+    INSTRUMENT -- inst_status;
+
+    // --- BOND (local attributes only) ---
+    bond_face   [label="Face_value",       shape=ellipse];
+    bond_coupon [label="Coupon_rate",      shape=ellipse];
+    bond_freq   [label="Coupon_frequency", shape=ellipse];
+    bond_issue  [label="Issue_date",       shape=ellipse];
+    bond_mat    [label="Maturity_date",    shape=ellipse];
+    BOND -- bond_face;
+    BOND -- bond_coupon;
+    BOND -- bond_freq;
+    BOND -- bond_issue;
+    BOND -- bond_mat;
+
+    // --- OPTION (local attributes only) ---
+    opt_strike [label="Strike",      shape=ellipse];
+    opt_exp    [label="Expiry",      shape=ellipse];
+    opt_type   [label="Option_type", shape=ellipse];
+    OPTION -- opt_strike;
+    OPTION -- opt_exp;
+    OPTION -- opt_type;
+
+    // --- ORDER ---
+    ord_id      [label=<<u>Order_id</u>>, shape=ellipse];
+    ord_side    [label="Side",       shape=ellipse];
+    ord_price   [label="Price",      shape=ellipse];
+    ord_qty     [label="Qty",        shape=ellipse];
+    ord_filled  [label="Filled_qty", shape=ellipse, style=dashed];
+    ord_status  [label="Status",     shape=ellipse];
+    ord_created [label="Created_at", shape=ellipse];
+    ORDER -- ord_id;
+    ORDER -- ord_side;
+    ORDER -- ord_price;
+    ORDER -- ord_qty;
+    ORDER -- ord_filled;
+    ORDER -- ord_status;
+    ORDER -- ord_created;
+
+    // --- ORDER_FILL (weak entity; Fill_seq = partial key, dashed underline) ---
+    fill_seq   [shape=ellipse, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="0"><TR><TD SIDES="B" STYLE="dashed">Fill_seq</TD></TR></TABLE>>];
+    fill_qty   [label="Qty",       shape=ellipse];
+    fill_price [label="Price",     shape=ellipse];
+    fill_at    [label="Filled_at", shape=ellipse];
+    ORDER_FILL -- fill_seq;
+    ORDER_FILL -- fill_qty;
+    ORDER_FILL -- fill_price;
+    ORDER_FILL -- fill_at;
+
+    // --- TRADE ---
+    trd_id    [label=<<u>Trade_id</u>>, shape=ellipse];
+    trd_price [label="Price",       shape=ellipse];
+    trd_qty   [label="Qty",         shape=ellipse];
+    trd_exec  [label="Executed_at", shape=ellipse];
+    TRADE -- trd_id;
+    TRADE -- trd_price;
+    TRADE -- trd_qty;
+    TRADE -- trd_exec;
+
+    // --- PRICE_BAR (weak entity; Trade_date = partial key, dashed underline) ---
+    pb_date [shape=ellipse, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="0"><TR><TD SIDES="B" STYLE="dashed">Trade_date</TD></TR></TABLE>>];
+    pb_open  [label="Open",   shape=ellipse];
+    pb_high  [label="High",   shape=ellipse];
+    pb_low   [label="Low",    shape=ellipse];
+    pb_close [label="Close",  shape=ellipse];
+    pb_vol   [label="Volume", shape=ellipse];
+    PRICE_BAR -- pb_date;
+    PRICE_BAR -- pb_open;
+    PRICE_BAR -- pb_high;
+    PRICE_BAR -- pb_low;
+    PRICE_BAR -- pb_close;
+    PRICE_BAR -- pb_vol;
+
+    // --- CASH_LEDGER ---
+    ledg_id      [label=<<u>Ledger_id</u>>, shape=ellipse];
+    ledg_type    [label="Entry_type", shape=ellipse];
+    ledg_amt     [label="Amount",     shape=ellipse];
+    ledg_value   [label="Value_date", shape=ellipse];
+    ledg_created [label="Created_at", shape=ellipse];
+    CASH_LEDGER -- ledg_id;
+    CASH_LEDGER -- ledg_type;
+    CASH_LEDGER -- ledg_amt;
+    CASH_LEDGER -- ledg_value;
+    CASH_LEDGER -- ledg_created;
+
+    // --- AUDIT_LOG ---
+    log_id      [label=<<u>Log_id</u>>, shape=ellipse];
+    log_tbl     [label="Table_name",    shape=ellipse];
+    log_row     [label="Row_id",        shape=ellipse];
+    log_act     [label="Action",        shape=ellipse];
+    log_old     [label="Old_values",    shape=ellipse];
+    log_new     [label="New_values",    shape=ellipse];
+    log_changed [label="Changed_at",    shape=ellipse];
+    AUDIT_LOG -- log_id;
+    AUDIT_LOG -- log_tbl;
+    AUDIT_LOG -- log_row;
+    AUDIT_LOG -- log_act;
+    AUDIT_LOG -- log_old;
+    AUDIT_LOG -- log_new;
+    AUDIT_LOG -- log_changed;
+
+    // ============================================================
+    // RELATIONSHIPS & PARTICIPATION CONSTRAINTS
+    // ============================================================
+
+    // USER 1 --- OWNS --- N ACCOUNT            (total on ACCOUNT)
+    OWNS [label="OWNS", shape=diamond, style=bold];
+    USER -- OWNS [taillabel="1"];
+    OWNS -- ACCOUNT [headlabel="N", color="black:invis:black", penwidth=1.5];
+
+    // ACCOUNT 1 --- PLACES --- N ORDER         (total on ORDER)
+    PLACES [label="PLACES", shape=diamond, style=bold];
+    ACCOUNT -- PLACES [taillabel="1", labeldistance=2.8];
+    PLACES -- ORDER [headlabel="N", labeldistance=3.2, labelangle=35, color="black:invis:black", penwidth=1.5];
+
+    // ORDER 1 --- HAS_FILL (identifying) --- N ORDER_FILL   (total on ORDER_FILL)
+    HAS_FILL [label="HAS_FILL", shape=diamond, peripheries=2, style=bold];
+    ORDER -- HAS_FILL [taillabel="1", labeldistance=3.0];
+    HAS_FILL -- ORDER_FILL [headlabel="N", color="black:invis:black", penwidth=1.5];
+
+    // ORDER_FILL N --- PART_OF --- 1 TRADE     (total on ORDER_FILL)
+    PART_OF [label="PART_OF", shape=diamond, style=bold];
+    ORDER_FILL -- PART_OF [taillabel="N", color="black:invis:black", penwidth=1.5];
+    PART_OF -- TRADE [headlabel="1"];
+
+    // ORDER (buy) 1 --- BUY_SIDE --- N TRADE   (total on TRADE)
+    BUY_SIDE [label="BUY_SIDE", shape=diamond, style=bold];
+    ORDER -- BUY_SIDE [taillabel="1", labeldistance=3.8];
+    BUY_SIDE -- TRADE [headlabel="N", color="black:invis:black", penwidth=1.5];
+
+    // ORDER (sell) 1 --- SELL_SIDE --- N TRADE (total on TRADE)
+    SELL_SIDE [label="SELL_SIDE", shape=diamond, style=bold];
+    ORDER -- SELL_SIDE [taillabel="1", labeldistance=3.0, labelangle=25];
+    SELL_SIDE -- TRADE [headlabel="N", labeldistance=3.4, labelangle=25, color="black:invis:black", penwidth=1.5];
+
+    // ACCOUNT M --- HOLDS --- N INSTRUMENT     (M:N, relationship attributes)
+    HOLDS [label="HOLDS", shape=diamond, style=bold];
+    ACCOUNT -- HOLDS [taillabel="M", labeldistance=3.4, labelangle=25];
+    HOLDS -- INSTRUMENT [headlabel="N"];
+
+    holds_qty  [label="Qty",      shape=ellipse, style=dashed];
+    holds_avg  [label="Avg_cost", shape=ellipse, style=dashed];
+    HOLDS -- holds_qty;
+    HOLDS -- holds_avg;
+
+    // ACCOUNT 1 --- LEDGER_FOR --- N CASH_LEDGER   (total on CASH_LEDGER)
+    LEDGER_FOR [label="LEDGER_FOR", shape=diamond, style=bold];
+    ACCOUNT -- LEDGER_FOR [taillabel="1", labeldistance=4.2];
+    LEDGER_FOR -- CASH_LEDGER [headlabel="N", color="black:invis:black", penwidth=1.5];
+
+    // TRADE 1 --- SETTLES --- N CASH_LEDGER    (partial on CASH_LEDGER: deposits, coupons, ...)
+    SETTLES [label="SETTLES", shape=diamond, style=bold];
+    TRADE -- SETTLES [taillabel="1"];
+    SETTLES -- CASH_LEDGER [headlabel="N"];
+
+    // INSTRUMENT 1 --- CONCERNS --- N CASH_LEDGER   (partial on both; used by instrument-linked entries e.g. COUPON)
+    CONCERNS [label="CONCERNS", shape=diamond, style=bold];
+    INSTRUMENT -- CONCERNS [taillabel="1", labeldistance=3.4, labelangle=25];
+    CONCERNS -- CASH_LEDGER [headlabel="N", labeldistance=3.0, labelangle=25];
+
+    // ORDER N --- FOR --- 1 INSTRUMENT         (total on ORDER)
+    FOR_INST [label="FOR", shape=diamond, style=bold];
+    ORDER -- FOR_INST [taillabel="N", labeldistance=3.2, labelangle=-35, color="black:invis:black", penwidth=1.5];
+    FOR_INST -- INSTRUMENT [headlabel="1"];
+
+    // INSTRUMENT 1 --- HAS_BARS (identifying) --- N PRICE_BAR   (total on PRICE_BAR)
+    HAS_BARS [label="HAS_BARS", shape=diamond, peripheries=2, style=bold];
+    INSTRUMENT -- HAS_BARS [taillabel="1", labeldistance=3.0];
+    HAS_BARS -- PRICE_BAR [headlabel="N", color="black:invis:black", penwidth=1.5];
+
+    // OPTION N --- HAS_UNDERLYING --- 1 INSTRUMENT   (total on OPTION)
+    UNDERLYING [label="HAS_UNDERLYING", shape=diamond, style=bold];
+    OPTION -- UNDERLYING [taillabel="N", color="black:invis:black", penwidth=1.5];
+    UNDERLYING -- INSTRUMENT [headlabel="1", labeldistance=3.8, labelangle=25];
+
+    // ============================================================
+    // EER: SPECIALIZATION  INSTRUMENT -> { BOND, OPTION }
+    // Attribute-defined on Instrument_type, DISJOINT (d), PARTIAL (single line to circle)
+    // ============================================================
+
+    spec_circle [label="d", shape=circle, width=0.35, height=0.35, style=bold, fontsize=11];
+
+    INSTRUMENT -- spec_circle [label="Instrument_type"];
+    spec_circle -- BOND   [label="  ⊂  'BOND'"];
+    spec_circle -- OPTION [label="  ⊂  'OPTION'"];
+
+    // ============================================================
+    // LEGEND (native nodes, stacked vertically: one row per symbol)
+    // ============================================================
+
+    subgraph cluster_legend {
+        label = "CHEN NOTATION LEGEND";
+        fontname = "Helvetica-Bold";
+        fontsize = 12;
+        style = "solid";
+        color = "black";
+        bgcolor = "#FAFFA8";
+        nodesep = 0.3;
+        ranksep = 0.3;
+
+        node [width=2.3];
+
+        leg_ent       [label="ENTITY", shape=box, style=bold];
+        leg_weak      [label="WEAK ENTITY", shape=box, peripheries=2, style=bold];
+        leg_rel       [label="RELATIONSHIP", shape=diamond, style=bold];
+        leg_id_rel    [label="IDENTIFYING", shape=diamond, peripheries=2, style=bold];
+        leg_attr      [label="Attribute", shape=ellipse];
+        leg_key       [label=<<u>Key_attribute</u>>, shape=ellipse];
+        leg_pkey      [shape=ellipse, label=<<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="0"><TR><TD SIDES="B" STYLE="dashed">Partial_Key</TD></TR></TABLE>>];
+        leg_der       [label="Derived", shape=ellipse, style=dashed];
+        leg_d         [label="d", shape=circle, width=0.35];
+
+        node [shape=plaintext, width=4.6];
+        leg_ent_desc    [label="Strong Entity Type (single box)\l"];
+        leg_weak_desc   [label="Weak Entity Type (double box)\l"];
+        leg_rel_desc    [label="Relationship Type (single diamond)\l"];
+        leg_id_rel_desc [label="Identifying Relationship (double diamond)\l"];
+        leg_attr_desc   [label="Attribute (oval)\l"];
+        leg_key_desc    [label="Key Attribute (underlined)\l"];
+        leg_pkey_desc   [label="Partial Key (dashed underline)\l"];
+        leg_der_desc    [label="Derived Attribute (dashed oval; stored, recomputable)\l"];
+        leg_d_desc      [label="Disjoint Specialization (d);  ⊂ = Subset symbol, faces superclass\l"];
+
+        leg_tot_a  [label="", shape=point, width=0];
+        leg_tot_b  [label="", shape=point, width=0];
+        leg_tot_desc  [label="Total Participation (double line)\l", shape=plaintext, width=4.6];
+        leg_part_a [label="", shape=point, width=0];
+        leg_part_b [label="", shape=point, width=0];
+        leg_part_desc [label="Partial Participation (single line)\l", shape=plaintext, width=4.6];
+
+        { rank=same; leg_ent;    leg_ent_desc; }
+        { rank=same; leg_weak;   leg_weak_desc; }
+        { rank=same; leg_rel;    leg_rel_desc; }
+        { rank=same; leg_id_rel; leg_id_rel_desc; }
+        { rank=same; leg_attr;   leg_attr_desc; }
+        { rank=same; leg_key;    leg_key_desc; }
+        { rank=same; leg_pkey;   leg_pkey_desc; }
+        { rank=same; leg_der;    leg_der_desc; }
+        { rank=same; leg_tot_a;  leg_tot_b; leg_tot_desc; }
+        { rank=same; leg_part_a; leg_part_b; leg_part_desc; }
+        { rank=same; leg_d;      leg_d_desc; }
+
+        leg_ent    -- leg_ent_desc    [style=invis];
+        leg_weak   -- leg_weak_desc   [style=invis];
+        leg_rel    -- leg_rel_desc    [style=invis];
+        leg_id_rel -- leg_id_rel_desc [style=invis];
+        leg_attr   -- leg_attr_desc   [style=invis];
+        leg_key    -- leg_key_desc    [style=invis];
+        leg_pkey   -- leg_pkey_desc   [style=invis];
+        leg_der    -- leg_der_desc    [style=invis];
+        leg_tot_a  -- leg_tot_b       [color="black:invis:black", penwidth=1.5, len=1];
+        leg_tot_b  -- leg_tot_desc    [style=invis];
+        leg_part_a -- leg_part_b      [color="black", penwidth=1.0];
+        leg_part_b -- leg_part_desc   [style=invis];
+        leg_d      -- leg_d_desc      [style=invis];
+
+        // vertical stacking of the rows
+        leg_ent -- leg_weak -- leg_rel -- leg_id_rel -- leg_attr -- leg_key -- leg_pkey -- leg_der -- leg_tot_a -- leg_part_a -- leg_d [style=invis];
+    }
+}
