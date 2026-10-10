@@ -1,37 +1,39 @@
-# Paper-Trading Exchange — DBMS Course Project (Group 9)
-## CS F212 Database Systems, BITS Pilani Hyderabad
+# CS F212 Database Systems — Project Mid-Semester Submission
+## Group 9: Paper-Trading Exchange
+**Institution:** BITS Pilani, Hyderabad Campus  
+**Course:** CS F212 Database Systems  
 
 ---
 
-### 📌 Project Overview
-A full-stack paper trading platform simulating a financial exchange with order matching, multi-instrument support (stocks, bonds, options), settlement, portfolio management, and an audit trail. Built on PostgreSQL with a focus on database design depth.
+## 1. Project Description
+This repository contains the database design and application architecture for a simulated paper-trading exchange supporting multiple financial instruments (stocks, bonds, and options), limit-order matching, settlement, and portfolio tracking. The primary focus of this submission is on formal database modeling, schema normalization, integrity constraints, and application architecture.
 
 ---
 
-### 📂 Repository Structure & Mid-Sem Submission Deliverables
+## 2. Team Members & Task Distribution
 
-* 📄 **[Midsem_Submission.pdf](Midsem_Submission.pdf)** — Complete formatted Mid-Semester Submission Report.
-* 📝 **[Midsem_Submission.md](Midsem_Submission.md)** — Source Markdown report detailing assumptions, 9-step relational schema mapping, tables/PK/FK lists, integrity constraints, BCNF normalization proofs, application workflows, tech stack, and DBMS features plan.
-* 🖼️ **[er_diagram.png](er_diagram.png)** & **[er_diagram.gv](er_diagram.gv)** — Chen-style ER/EER Diagram (Elmasri & Navathe 7th ed.) with disjoint specialization hierarchy (`BOND`/`OPTION`), weak entities, and total/partial participation constraints.
-* 📐 **[schema_diagram.png](schema_diagram.png)** & **[schema_diagram.gv](schema_diagram.gv)** — Visual Relational Schema Diagram showing all 12 database tables, PKs, FKs, and relationship connections.
-
----
-
-### 👥 Team Members & Mid-Sem Contributions
-
-| Name | Student ID | Mid-Sem Contributions |
+| Name | Student ID | Mid-Semester Responsibilities |
 |---|---|---|
-| **Devansh Rupesh Anadkat** | `2024ADPS0198H` | Author of conceptual ER/EER model (Chen notation), EER disjoint specialization hierarchy (`BOND`/`OPTION`), 9-step relational schema mapping procedure, and transaction stored procedure matching engine (`match_and_settle`). |
-| **Akarsh Ramadugu** | `2024ADPS0196H` | BCNF normalization proof, design performance trade-off justifications, formulation of non-trivial SQL analytics queries, partial index strategy, and database view specifications. |
-| **Shashank Bodala** | `2024ADPS0186H` | Definition of database integrity constraints (`CHECK`, `UNIQUE`, `NOT NULL`) and trigger logic specifications (audit logging, subtype disjointness, fill sync). |
-| **Druhin Sourya Datta Bommisetti** | `2024ADPS0182H` | Application design specifications, high-level architecture layout, and definition of the 3 core application workflows. |
-| **Hakimkari Sathvika** | `2024ADPS0192H` | Data loading strategy planning (`COPY` ingestion), synthetic pricing formulas (Black-Scholes & yield curves), and GitHub repository structure. |
+| **Devansh Rupesh Anadkat** | 2024ADPS0198H | Conceptual ER/EER modeling (Chen notation), EER disjoint specialization (`BOND`/`OPTION`), 9-step relational schema mapping, and stored procedure matching engine design (`match_and_settle`). |
+| **Akarsh Ramadugu** | 2024ADPS0196H | BCNF normalization verification, performance denormalization trade-offs, non-trivial analytical SQL queries, partial indexing strategy, and database views. |
+| **Shashank Bodala** | 2024ADPS0186H | Domain integrity constraints (`CHECK`, `UNIQUE`, `NOT NULL`) and trigger specifications (audit log, subtype disjointness, fill quantity synchronization). |
+| **Druhin Sourya Datta Bommisetti** | 2024ADPS0182H | Application architecture, core workflow definitions, and FastAPI/psycopg3 interface specification. |
+| **Hakimkari Sathvika** | 2024ADPS0192H | Data population pipeline planning (PostgreSQL `COPY`), market data seeding logic, and repository organization. |
 
 ---
 
-### 📊 Current Progress
-* ✅ **ER/EER Model**: 11 entities, 13 relationships, 2 weak entities (`ORDER_FILL`, `PRICE_BAR`), and attribute-defined disjoint partial specialization (`INSTRUMENT` → `BOND` / `OPTION`).
-* ✅ **Relational Mapping**: 9-step formal mapping resulting in 12 BCNF relations with 14 foreign key constraints.
-* ✅ **Integrity Constraints**: Complete specification of `CHECK`, `UNIQUE`, `NOT NULL`, and 7 trigger-enforced rules.
-* ✅ **DBMS Features & Query Plans**: 5 DBMS feature categories and 7 non-trivial SQL analytical queries planned.
-* ✅ **Architecture**: High-level PostgreSQL 16 + FastAPI + raw `psycopg3` architecture designed.
+## 3. Mid-Semester Deliverables
+
+* **[Midsem_Submission.pdf](Midsem_Submission.pdf)**: Complete 5-page mid-semester submission report.
+* **[Midsem_Submission.md](Midsem_Submission.md)**: Markdown source for the submission report.
+* **[er_diagram.png](er_diagram.png)** / **[er_diagram.gv](er_diagram.gv)**: Chen-notation ER/EER diagram (Elmasri & Navathe 7th ed.) including entity types, relationships, weak entities, and specialization hierarchy.
+* **[schema_diagram.png](schema_diagram.png)** / **[schema_diagram.gv](schema_diagram.gv)**: Relational schema diagram illustrating table structures, primary keys, foreign keys, and referential constraints.
+
+---
+
+## 4. Current Implementation Status
+* **Relational Schema:** 12 normalized relations in BCNF.
+* **Foreign Keys:** 14 explicit referential integrity links across tables.
+* **Specialization Hierarchy:** Attribute-defined, disjoint, partial specialization mapping `INSTRUMENT` into `BOND` and `OPTION` subclasses.
+* **Weak Entities:** `PRICE_BAR` (owner `INSTRUMENT`) and `ORDER_FILL` (owner `ORDER`).
+* **Planned Features:** Stored procedures for order matching, triggers for audit logging and domain constraints, and partial indexes for open limit orders.
