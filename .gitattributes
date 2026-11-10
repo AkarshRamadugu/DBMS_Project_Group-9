@@ -1,0 +1,10 @@
+# Normalize line endings across Windows, macOS, and Linux teammates
+* text=auto
+
+# Shell scripts and Dockerfiles mounted into Linux containers MUST stay LF
+*.sh text eol=lf
+*.sql text eol=lf
+Dockerfile text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
