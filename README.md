@@ -9,16 +9,26 @@ Built for BITS Pilani CS F212 Database Systems — the design prioritises relati
 ## Quick Start
 
 ```bash
-docker-compose up --build
+docker compose up -d --build
 ```
 
 | Service | URL |
 |---|---|
 | Streamlit dashboard | http://localhost:8501 |
 | FastAPI (REST + docs) | http://localhost:8000/docs |
-| PostgreSQL | localhost:5432 |
+| PostgreSQL | localhost:5432 (`db: paper_trading`, `user: trader`, `password: changeme`) |
 
-The database is seeded automatically on first run (3 users, 10 instruments, 10 days of OHLCV, initial positions).
+The database is initialized and seeded automatically on first run (3 users, 10 instruments, 10 days of OHLCV, initial positions).
+
+To seed 252 trading days of price bars (for >500 rows and 30-day rolling returns) and run the 7 standalone SQL queries:
+
+```bash
+# Seed 252 days of OHLCV bars via the backend container (works in PowerShell & Bash)
+cat scripts/seed_prices.py | docker compose exec -T backend python -
+
+# Run the 7 analytical queries directly in PostgreSQL
+cat db/queries/001_analytical_queries.sql | docker compose exec -T postgres psql -U trader -d paper_trading
+```
 
 ---
 
@@ -43,6 +53,7 @@ PostgreSQL 16
 
 ```
 project/
+├── Midsem/                              # Mid-semester report, ER & schema diagrams
 ├── db/
 │   ├── migrations/001_schema.sql        # 12-relation DDL, all constraints & indexes
 │   ├── triggers/001_triggers.sql        # 5 trigger functions
@@ -121,6 +132,49 @@ project/
 | `GET /analytics/vwap/{id}` | Weighted avg `SUM(p×q)/SUM(q)`, GROUP BY day |
 | `GET /analytics/holdings-vs-cash` | `LATERAL` correlated subquery |
 | `GET /analytics/bond-ytm/{id}` | YTM approximation formula |
+
+---
+
+## Co-Developer & Container Workflow
+
+### First-Time Setup on Your Machine
+Make sure **Docker Desktop** is running, then clone and start the stack:
+
+```bash
+git clone https://github.com/AkarshRamadugu/DBMS_Project_Group-9.git
+cd DBMS_Project_Group-9
+docker compose up -d --build
+```
+
+> **Port 5432 conflict:** If you already have a local PostgreSQL service running on your machine, stop it first (otherwise the `postgres` container will fail to bind port `5432`).
+
+### Editing Code Without Rebuilding
+- `docker-compose.yml` mounts `./backend:/app` and `./frontend:/app`, so edits to FastAPI or Streamlit Python files hot-reload automatically without rebuilding images.
+- `.gitattributes` locks `*.sh`, `*.sql`, `Dockerfile`, and `*.yml` to LF (`\n`) line endings so Windows teammates won't break `db/init.sh` inside the Linux Postgres container.
+
+### When Dependencies or SQL Files Change
+- **If `db/` (`*.sql`) changed:** PostgreSQL only runs `db/init.sh` when the `pgdata` volume is empty. After pulling SQL changes, wipe the volume and recreate the containers:
+  ```bash
+  docker compose down -v
+  docker compose up -d --build
+  ```
+- **If `requirements.txt` or a `Dockerfile` changed:** rebuild the images:
+  ```bash
+  docker compose up -d --build
+  ```
+
+### Git Workflow (Avoiding Merge Conflicts)
+Work on your own feature branch instead of pushing directly over someone else's edits on `main`:
+
+```bash
+git checkout main
+git pull origin main
+git checkout -b <your-name>/<feature>    # e.g. devansh/eod-tests
+# ...edit, test, and commit...
+git push -u origin <your-name>/<feature>
+```
+
+Then open a Pull Request into `main` on GitHub (or run `git pull --rebase origin main` before pushing). Never commit local `.env` files (`.gitignore` ignores them automatically).
 
 ---
 
