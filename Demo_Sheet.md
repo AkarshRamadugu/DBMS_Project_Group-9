@@ -13,7 +13,7 @@
 | **Final commit hash** | `854c38efdfe95e4caef5aeb707850cde7f6edacd` (tag: `final`) |
 | **RDBMS & stack** | PostgreSQL 16 · FastAPI (Python, psycopg3) · Streamlit · Docker Compose |
 | **Number of tables** | 12 |
-| **Total database records** | ≈ 1,380 on a fresh setup (168 seed rows + 1,260 synthetic price bars from `seed_prices.py`); grows with every order, trade and audit entry |
+| **Total database records** | ≈ 1,380 on a fresh setup (168 seed rows; `seed_prices.py` then brings `price_bar` to 1,310 rows: 252 trading days for 5 stocks); grows with every order, trade and audit entry |
 
 ---
 
@@ -21,7 +21,7 @@
 
 | # | Workflow / Purpose | DBMS Aspect | Tables Involved | UI Action → Database Effect |
 |---|---|---|---|---|
-| 1 | **Limit-Order Matching & Settlement** — Place a BUY or SELL limit order; engine matches against resting counter-orders and settles all fills atomically | SERIALIZABLE transaction · `SELECT … FOR UPDATE` row-locking · `match_and_settle` stored procedure · `fn_fill_qty_sync` trigger | `trade_order`, `trade`, `order_fill`, `position`, `cash_ledger`, `account` | User clicks "Submit Order" → `INSERT trade_order` → `CALL match_and_settle()` → `TRADE` rows created, `ORDER_FILL` rows inserted, `POSITION` upserted, `ACCOUNT.cash_balance` debited/credited, `AUDIT_LOG` written, order status updated to FILLED/PARTIAL |
+| 1 | **Limit-Order Matching & Settlement** — Place a BUY or SELL limit order; engine matches against resting counter-orders and settles all fills atomically | SERIALIZABLE transaction · `SELECT … FOR UPDATE` row-locking · `match_and_settle` stored procedure · `fn_fill_qty_sync` trigger | `trade_order`, `trade`, `order_fill`, `position`, `cash_ledger`, `account` | User clicks the BUY/SELL button on the Place Order ticket → `INSERT trade_order` → `CALL match_and_settle()` → `TRADE` rows created, `ORDER_FILL` rows inserted, `POSITION` upserted, `ACCOUNT.cash_balance` debited/credited, `AUDIT_LOG` written, order status updated to FILLED/PARTIAL |
 | 2 | **Portfolio Dashboard** — View real-time unrealized P&L and portfolio value for any account | Multi-CTE · `DISTINCT ON` latest price · Window `SUM() OVER ()` · `portfolio_view` and `portfolio_summary_view` | `position`, `account`, `instrument`, `price_bar` | User selects account → `portfolio_view` queried via `GET /analytics/portfolio/{id}` → live market value and unrealized P&L computed from latest `price_bar.close` |
 | 3 | **Integrity & Constraint Demo** — Attempt to place an order on an EXPIRED instrument or with insufficient cash | CHECK constraints · `fn_expired_instrument` BEFORE trigger · application-level pre-check | `instrument`, `account`, `trade_order` | User submits order → trigger fires `RAISE EXCEPTION 'integrity_constraint_violation'` → FastAPI maps to HTTP 400 → Streamlit shows error message |
 
