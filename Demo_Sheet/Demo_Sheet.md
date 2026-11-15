@@ -10,7 +10,7 @@
 | **Team ID / Lab section** | Group 9 |
 | **Members** | Devansh Rupesh Anadkat (2024ADPS0198H), Akarsh Ramadugu (2024ADPS0196H), Shashank Bodala (2024ADPS0186H), Druhin Sourya Datta Bommisetti (2024ADPS0182H), Hakimkari Sathvika (2024ADPS0192H) |
 | **GitHub repository** | https://github.com/AkarshRamadugu/DBMS_Project_Group-9 |
-| **Final commit hash** | `d0a3988adf13c6e25730b68f51b05844b590dcaf` (tag: `final`) |
+| **Final commit hash** | see git tag `final` (hash recorded in the next commit) |
 | **RDBMS & stack** | PostgreSQL 16 · FastAPI (Python, psycopg3) · Streamlit · Docker Compose |
 | **Number of tables** | 12 |
 | **Total database records** | ≈ 1,380 on a fresh setup (168 seed rows; `seed_prices.py` then brings `price_bar` to 1,310 rows: 252 trading days for 5 stocks); grows with every order, trade and audit entry |
@@ -23,7 +23,7 @@
 |---|---|---|---|---|
 | 1 | **Limit-Order Matching & Settlement** — Place a BUY or SELL limit order; engine matches against resting counter-orders and settles all fills atomically | SERIALIZABLE transaction · `SELECT … FOR UPDATE` row-locking · `match_and_settle` stored procedure · `fn_fill_qty_sync` trigger | `trade_order`, `trade`, `order_fill`, `position`, `cash_ledger`, `account` | User clicks the BUY/SELL button on the Place Order ticket → `INSERT trade_order` → `CALL match_and_settle()` → `TRADE` rows created, `ORDER_FILL` rows inserted, `POSITION` upserted, `ACCOUNT.cash_balance` debited/credited, `AUDIT_LOG` written, order status updated to FILLED/PARTIAL |
 | 2 | **Portfolio Dashboard** — View real-time unrealized P&L and portfolio value for any account | Multi-CTE · `DISTINCT ON` latest price · Window `SUM() OVER ()` · `portfolio_view` and `portfolio_summary_view` | `position`, `account`, `instrument`, `price_bar` | User selects account → `portfolio_view` queried via `GET /analytics/portfolio/{id}` → live market value and unrealized P&L computed from latest `price_bar.close` |
-| 3 | **Integrity & Constraint Demo** — Attempt to place an order on an EXPIRED instrument or with insufficient cash | CHECK constraints · `fn_expired_instrument` BEFORE trigger · application-level pre-check | `instrument`, `account`, `trade_order` | User submits order → trigger fires `RAISE EXCEPTION 'integrity_constraint_violation'` → FastAPI maps to HTTP 400 → Streamlit shows error message |
+| 3 | **Integrity & Constraint Demo** — Attempt to place an order on an EXPIRED instrument or with insufficient cash | CHECK constraints · `trg_expired_instrument` BEFORE INSERT trigger · application-level pre-check | `instrument`, `account`, `trade_order`, `position` | Order with insufficient cash → API pre-check, backed by CHECK `cash_balance >= 0` → HTTP 400 → Streamlit shows the error. Expired instrument: API status check rejects it, and at DB level `trg_expired_instrument` raises `integrity_constraint_violation` (shown in psql) |
 
 ---
 

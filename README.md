@@ -98,6 +98,7 @@ Get-Content scripts/demo_concurrent_orders.py | docker compose exec -T backend p
 
 ```
 project/
+├── Demo_Sheet/                          # Demo Sheet (Markdown source + one-page PDF)
 ├── Design_Document/                     # Final Database Design Document (PDF, 5 pages)
 ├── Midsem/                              # Mid-semester report, ER & schema diagrams
 ├── db/
@@ -278,8 +279,9 @@ python scripts/run_stress_test.py
 |---|---|
 | **Submission deadline** | Sunday, 15 November 2026, 11:59 PM |
 | **Demo dates** | 17–19 November 2026 (respective lab sessions) |
-| **Final commit hash** | `d0a3988adf13c6e25730b68f51b05844b590dcaf` (tag: `final`) |
+| **Final commit hash** | see git tag `final` (hash recorded in the next commit) |
 | **GitHub repo** | https://github.com/AkarshRamadugu/DBMS_Project_Group-9 |
+| **Demo sheet** | [`Demo_Sheet/Demo_Sheet.pdf`](Demo_Sheet/Demo_Sheet.pdf) · source [`Demo_Sheet/Demo_Sheet.md`](Demo_Sheet/Demo_Sheet.md) |
 | **Design document** | [`Design_Document/Database_Design_Document_Group9.pdf`](Design_Document/Database_Design_Document_Group9.pdf) |
 
 ### Tagging the final commit
