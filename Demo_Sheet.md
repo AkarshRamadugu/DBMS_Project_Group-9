@@ -10,7 +10,7 @@
 | **Team ID / Lab section** | Group 9 |
 | **Members** | Devansh Rupesh Anadkat (2024ADPS0198H), Akarsh Ramadugu (2024ADPS0196H), Shashank Bodala (2024ADPS0186H), Druhin Sourya Datta Bommisetti (2024ADPS0182H), Hakimkari Sathvika (2024ADPS0192H) |
 | **GitHub repository** | https://github.com/AkarshRamadugu/DBMS_Project_Group-9 |
-| **Final commit hash** | _(paste output of `git rev-parse HEAD` after final tag)_ |
+| **Final commit hash** | `94fd473d5b7602adc9dd17dee80e6f4660eec197` (tag: `final`) |
 | **RDBMS & stack** | PostgreSQL 16 · FastAPI (Python, psycopg3) · Streamlit · Docker Compose |
 | **Number of tables** | 12 |
 | **Total database records** | ≥ 2,600 (after seeding 252 days of price bars) |
@@ -50,3 +50,4 @@
 | 3 | **Triggers (5)** | `trg_audit_*` · `trg_subtype_bond/option` · `trg_trade_validation` · `trg_expired_instrument` · `trg_fill_qty_sync` | `db/triggers/001_triggers.sql` : 72–360 | Audit log (AFTER DML on 7 tables); ISA disjointness enforcement (BEFORE INSERT on bond/option); trade cross-validation (buy+sell same instrument, correct sides); expired-instrument rejection; filled_qty sync and status update |
 | 4 | **Views (3)** | `order_book_view` · `portfolio_view` · `portfolio_summary_view` | `db/views/001_views.sql` : 30, 87, 139 | Reusable aggregated projections: order book depth (grouped by instrument/side/price), per-position market value and P&L (LATERAL latest price), account-level portfolio summary with COALESCE for cash-only accounts |
 | 5 | **Indexes (11)** | `idx_trade_order_book` (partial) · `idx_price_bar_latest` (DESC) · 9 FK-support indexes | `db/migrations/001_schema.sql` : 336–358 | Partial index on OPEN/PARTIAL orders only (keeps index small); DESC composite index for "latest close per instrument" lookups; FK indexes eliminate seq scans on join columns |
+

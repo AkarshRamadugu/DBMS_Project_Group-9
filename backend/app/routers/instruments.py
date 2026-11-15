@@ -165,7 +165,7 @@ async def get_order_book(instrument_id: int):
                     SELECT *
                     FROM order_book_view
                     WHERE instrument_id = %s
-                    ORDER BY side DESC, price DESC
+                    ORDER BY sort_key ASC
                     """,
                     (instrument_id,),
                 )
