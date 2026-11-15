@@ -127,31 +127,35 @@ COMMENT ON VIEW portfolio_view IS
 
 
 -- ===========================================================================
--- BONUS VIEW: portfolio_summary_view
+-- VIEW 3: portfolio_summary_view
 -- Rolls up portfolio_view to per-account totals including cash balance.
 -- Useful for Workflow 2 (Portfolio Dashboard) from §2.1.
+--
+-- Starts from ACCOUNT (not portfolio_view) and LEFT JOINs positions so that
+-- accounts holding only cash still appear in the report. Aggregate columns
+-- are COALESCEd to 0 for those accounts instead of returning NULL.
 -- ===========================================================================
 
 CREATE OR REPLACE VIEW portfolio_summary_view AS
 SELECT
-    pv.account_id,
-    pv.user_id,
-    pv.is_house,
+    a.account_id,
+    a.user_id,
+    a.is_house,
     a.cash_balance,
-    -- Aggregate by instrument type
-    SUM(pv.market_value)   FILTER (WHERE pv.instrument_type = 'STOCK')  AS stock_market_value,
-    SUM(pv.market_value)   FILTER (WHERE pv.instrument_type = 'BOND')   AS bond_market_value,
-    SUM(pv.market_value)   FILTER (WHERE pv.instrument_type = 'OPTION') AS option_market_value,
-    SUM(pv.market_value)                                                 AS total_holdings_value,
-    SUM(pv.unrealized_pnl)                                               AS total_unrealized_pnl,
+    -- Aggregate holdings by instrument type
+    COALESCE(SUM(pv.market_value) FILTER (WHERE pv.instrument_type = 'STOCK'),  0) AS stock_market_value,
+    COALESCE(SUM(pv.market_value) FILTER (WHERE pv.instrument_type = 'BOND'),   0) AS bond_market_value,
+    COALESCE(SUM(pv.market_value) FILTER (WHERE pv.instrument_type = 'OPTION'), 0) AS option_market_value,
+    COALESCE(SUM(pv.market_value), 0)                                              AS total_holdings_value,
+    COALESCE(SUM(pv.unrealized_pnl), 0)                                            AS total_unrealized_pnl,
     -- Total portfolio value = cash + all holdings
-    a.cash_balance + COALESCE(SUM(pv.market_value), 0)                  AS total_portfolio_value
-FROM portfolio_view pv
-JOIN account a ON a.account_id = pv.account_id
-GROUP BY pv.account_id, pv.user_id, pv.is_house, a.cash_balance;
+    a.cash_balance + COALESCE(SUM(pv.market_value), 0)                             AS total_portfolio_value
+FROM account a
+LEFT JOIN portfolio_view pv ON pv.account_id = a.account_id
+GROUP BY a.account_id, a.user_id, a.is_house, a.cash_balance;
 
 COMMENT ON VIEW portfolio_summary_view IS
-    'Account-level portfolio summary: cash + holdings by asset class, total unrealized P&L, and total portfolio value.';
+    'Account-level portfolio summary: cash + holdings by asset class, total unrealized P&L, and total portfolio value. Includes cash-only accounts with zero holding totals.';
 
 
 -- ===========================================================================
