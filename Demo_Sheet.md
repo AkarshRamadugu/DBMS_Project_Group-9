@@ -13,7 +13,7 @@
 | **Final commit hash** | `94fd473d5b7602adc9dd17dee80e6f4660eec197` (tag: `final`) |
 | **RDBMS & stack** | PostgreSQL 16 · FastAPI (Python, psycopg3) · Streamlit · Docker Compose |
 | **Number of tables** | 12 |
-| **Total database records** | ≥ 2,600 (after seeding 252 days of price bars) |
+| **Total database records** | ≈ 1,380 on a fresh setup (168 seed rows + 1,260 synthetic price bars from `seed_prices.py`); grows with every order, trade and audit entry |
 
 ---
 
@@ -45,7 +45,7 @@
 
 | # | Feature | Object / Function Name | Source File : Line | Purpose / Effect |
 |---|---|---|---|---|
-| 1 | **SERIALIZABLE Transaction** | `match_and_settle(p_order_id)` | `db/procedures/001_match_and_settle.sql` : 15–339  `backend/app/routers/orders.py` : 127 | Prevents phantom reads during order matching; `SELECT … FOR UPDATE SKIP LOCKED` row-locks resting orders; retries on `SerializationFailure` |
+| 1 | **SERIALIZABLE Transaction** | `match_and_settle(p_order_id)` | `db/procedures/001_match_and_settle.sql` : 15–339  `backend/app/routers/orders.py` : 136 | Prevents phantom reads during order matching; `SELECT … FOR UPDATE SKIP LOCKED` row-locks resting orders; retries on `SerializationFailure` / deadlock; the API feeds the matcher one order at a time so concurrent orders never deadlock |
 | 2 | **Stored Procedures** | `match_and_settle(BIGINT)` · `end_of_day(DATE)` | `db/procedures/001_match_and_settle.sql` : 15  `db/procedures/002_end_of_day.sql` : 13 | (1) Full order-matching engine — creates TRADE, ORDER_FILL, updates POSITION and ACCOUNT.cash_balance; (2) Nightly batch — pays bond coupons, settles expiring options, marks instruments EXPIRED |
 | 3 | **Triggers (5)** | `trg_audit_*` · `trg_subtype_bond/option` · `trg_trade_validation` · `trg_expired_instrument` · `trg_fill_qty_sync` | `db/triggers/001_triggers.sql` : 72–360 | Audit log (AFTER DML on 7 tables); ISA disjointness enforcement (BEFORE INSERT on bond/option); trade cross-validation (buy+sell same instrument, correct sides); expired-instrument rejection; filled_qty sync and status update |
 | 4 | **Views (3)** | `order_book_view` · `portfolio_view` · `portfolio_summary_view` | `db/views/001_views.sql` : 30, 87, 139 | Reusable aggregated projections: order book depth (grouped by instrument/side/price), per-position market value and P&L (LATERAL latest price), account-level portfolio summary with COALESCE for cash-only accounts |

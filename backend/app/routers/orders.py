@@ -1,4 +1,5 @@
 import asyncio
+import random
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
@@ -9,6 +10,14 @@ from psycopg.rows import dict_row
 from app.database import get_conn
 
 router = APIRouter()
+
+# The matching engine runs one incoming order at a time (as a real exchange's
+# matcher does): price-time priority needs a total order of arrivals, and it
+# prevents two concurrent matches from locking the same two ACCOUNT rows in
+# opposite order (a deadlock). Isolation is still enforced by PostgreSQL:
+# each order runs in its own SERIALIZABLE transaction with SELECT ... FOR UPDATE,
+# and conflicts with other writers (cancels, deposits) are retried below.
+_matching_lock = asyncio.Lock()
 
 
 class PlaceOrderBody(BaseModel):
@@ -116,9 +125,9 @@ async def get_order(order_id: int):
 @router.post("", status_code=201)
 async def place_order(body: PlaceOrderBody):
     """Place a new limit order and attempt matching via match_and_settle stored procedure."""
-    max_retries = 3
+    max_retries = 5
     try:
-        async with get_conn() as conn:
+        async with _matching_lock, get_conn() as conn:
             for attempt in range(max_retries):
                 try:
                     async with conn.transaction():
@@ -203,13 +212,14 @@ async def place_order(body: PlaceOrderBody):
                     result["fills"] = [dict(f) for f in fills]
                     return result
 
-                except psycopg.errors.SerializationFailure:
+                except (psycopg.errors.SerializationFailure, psycopg.errors.DeadlockDetected):
+                    # SQLSTATE 40001 / 40P01: PostgreSQL rolled the transaction back; safe to retry.
                     if attempt == max_retries - 1:
                         raise HTTPException(
                             status_code=409,
                             detail="Concurrent serialization conflict; please retry order.",
                         )
-                    await asyncio.sleep(0.05 * (2 ** attempt))
+                    await asyncio.sleep(0.02 * (2 ** attempt) + random.uniform(0, 0.02))
                 except (
                     psycopg.errors.RaiseException,
                     psycopg.errors.IntegrityError,

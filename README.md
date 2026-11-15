@@ -53,6 +53,39 @@ PostgreSQL 16
   └─ 2 query indexes      (1 partial: open orders; 1 DESC: latest price bars)
 ```
 
+### Technology Stack
+
+| Layer | Technology |
+|---|---|
+| Database | PostgreSQL 16 (PL/pgSQL procedures, triggers, views, partial index) |
+| Backend | Python 3.12 · FastAPI · psycopg 3 (async pool) — hand-written SQL, no ORM |
+| Frontend | Streamlit 1.39 · Plotly · pandas |
+| Packaging | Docker Compose (postgres, backend, frontend) |
+
+### Frontend Pages
+
+| Page | What it shows / does |
+|---|---|
+| **Market Overview** | Quote header, candlestick + volume chart (SMA 20/50), live **Order Book Depth** ladder with cumulative quantity, depth chart, **VWAP** table, Market Watch for all instruments |
+| **Place Order** | Order ticket (BUY/SELL, limit price, qty) with pre-trade checks (cash × multiplier, holdings), live depth, confirmation with fills |
+| **Portfolio** | Net worth / cash / unrealized P&L cards, **Positions** table, allocation charts, **Realized P&L** tab, **Cash Ledger** tab, deposit funds |
+| **Order History** | Order blotter with status filters; select OPEN/PARTIAL orders and cancel them |
+| **Analytics** | Rolling 30-day return, max drawdown, 30-day price channel, **Holdings vs Cash** report, **Bond YTM** calculator |
+
+The trading account is chosen in the sidebar (the house / market-maker account is included so SELL liquidity can be demonstrated).
+
+---
+
+## Application Workflows
+
+1. **Place, match and settle an order (transaction).** Place Order → `POST /orders` inserts a `trade_order` row and calls `match_and_settle()` in one SERIALIZABLE transaction. Matching uses price-time priority with `SELECT … FOR UPDATE`; each fill creates `trade` + two `order_fill` rows, upserts both `position` rows, writes two `cash_ledger` entries, updates both `account.cash_balance`, and the triggers sync `filled_qty`/status and write `audit_log`.
+2. **Portfolio and market reporting (complex retrieval).** Portfolio and Market Overview pages call the analytics endpoints (CTEs, `DISTINCT ON`, `LATERAL`, window functions) for positions with unrealized P&L, realized P&L, order-book depth with running totals, VWAP, rolling returns/drawdown and bond YTM.
+3. **Integrity enforcement.** Invalid actions are rejected by the database: overspend (`account.cash_balance >= 0` CHECK + API pre-check), oversell (procedure check + `position.qty >= 0`), orders on EXPIRED instruments (`trg_expired_instrument`), wrong subtype rows (`trg_subtype_bond/option`), duplicate coupon payouts (`uq_cash_ledger_idempotent`). The UI shows the database's error message.
+
+### Concurrency
+
+Many clients can submit orders simultaneously. Each order runs in its own SERIALIZABLE transaction with row locks; the API hands incoming orders to the matching engine one at a time (like a real exchange's sequential matcher, which price-time priority requires), so two matches can never lock the same accounts in opposite order. Serialization failures and deadlocks caused by other writers (cancels, deposits) are retried automatically. `scripts/run_stress_test.py` (10–20 threads, hundreds of orders) verifies cash-ledger, fill-quantity and non-negative-position invariants afterwards.
+
 ---
 
 ## Project Structure
@@ -83,7 +116,10 @@ project/
 │   ├── Dockerfile
 │   └── requirements.txt
 ├── frontend/
-│   ├── app.py                          # 5-page Streamlit dashboard
+│   ├── app.py                          # 5-page Streamlit trading terminal (pages & layout)
+│   ├── api.py                          # REST client for the FastAPI backend + short-TTL caching
+│   ├── ui.py                           # Theme, number formatting, depth ladder, tables
+│   ├── .streamlit/config.toml          # Dark theme
 │   ├── Dockerfile
 │   └── requirements.txt
 ├── scripts/
@@ -238,6 +274,22 @@ git push origin final
 ```
 
 Then record `git rev-parse HEAD` in this table and in the Demo Sheet PDF.
+
+---
+
+## Changes from the Mid-Semester Plan
+
+The schema (12 relations, keys, constraints), the 5 triggers, both stored procedures, the 7 queries and the 3 workflows were implemented as planned. Differences:
+
+| Mid-sem plan | Final implementation |
+|---|---|
+| 2 views | 3 views (`portfolio_summary_view` added for account-level totals incl. cash-only accounts) |
+| 2 indexes | The 2 planned query indexes, plus 9 indexes on foreign-key columns |
+| Latest price via `ROW_NUMBER` | `DISTINCT ON` / `LATERAL … LIMIT 1` (same result, uses `idx_price_bar_latest`) |
+| Bond YTM as a stored function | Parameterised SQL query (`db/queries`, `/analytics/bond-ytm`) |
+| Price data from NSE bhavcopy; bonds from yield curves; options from Black-Scholes | `seed_prices.py` loads a bhavcopy CSV via `COPY` (`--csv`) or generates 252 days of synthetic GBM bars for the stocks. Bonds and options use the hand-written bars in `db/seed/001_seed.sql`; yield-curve and Black-Scholes pricing were not implemented |
+| "Input validation & auth" in the API | Input validation via Pydantic and database constraints. No login/authentication: `user_account.password_hash` is stored but the demo selects accounts from the sidebar |
+| Streamlit or React | Streamlit |
 
 ---
 
