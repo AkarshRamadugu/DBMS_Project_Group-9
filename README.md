@@ -44,7 +44,7 @@ PostgreSQL 16
   ├─ 2 stored procedures  (match_and_settle, end_of_day)
   ├─ 5 triggers           (audit, subtype, trade-validation, expiry, fill-sync)
   ├─ 3 views              (order_book, portfolio, portfolio_summary)
-  └─ 2 partial indexes    (open orders, latest price bars)
+  └─ 2 query indexes      (1 partial: open orders; 1 DESC: latest price bars)
 ```
 
 ---
@@ -128,10 +128,12 @@ project/
 | `GET /analytics/order-book-depth/{id}` | `SUM() OVER` running total |
 | `GET /analytics/portfolio/{account_id}` | CTE + `DISTINCT ON` for latest price |
 | `GET /analytics/realized-pnl/{account_id}` | Multi-join, `CASE`, aggregate |
-| `GET /analytics/rolling-returns/{id}` | `LAG(close, 30)`, `MIN OVER … ROWS BETWEEN` |
+| `GET /analytics/rolling-returns/{id}` | `LAG(close, 30)`, `MAX OVER` running peak, `MIN OVER … ROWS BETWEEN` |
 | `GET /analytics/vwap/{id}` | Weighted avg `SUM(p×q)/SUM(q)`, GROUP BY day |
 | `GET /analytics/holdings-vs-cash` | `LATERAL` correlated subquery |
 | `GET /analytics/bond-ytm/{id}` | YTM approximation formula |
+
+All seven queries are defined in `db/queries/001_analytical_queries.sql` and mirrored in `backend/app/routers/analytics.py`. Query 1 returns each side best-price-first so its cumulative depth column is monotonic top-to-bottom.
 
 ---
 
@@ -216,7 +218,7 @@ python scripts/run_stress_test.py
 | Name | ID | Responsibilities |
 |---|---|---|
 | Devansh Rupesh Anadkat | 2024ADPS0198H | ER/EER model, 9-step schema mapping, `match_and_settle` design |
-| Akarsh Ramadugu | 2024ADPS0196H | BCNF normalization, analytical SQL queries, indexes, views |
+| Akarsh Ramadugu | 2024ADPS0196H | BCNF normalization proof, 7 analytical SQL queries, index strategy, database views |
 | Shashank Bodala | 2024ADPS0186H | Integrity constraints, trigger specifications |
 | Druhin Sourya Datta Bommisetti | 2024ADPS0182H | Application architecture, FastAPI backend, workflows |
 | Hakimkari Sathvika | 2024ADPS0192H | Data pipeline, price seeding, repository organisation |
