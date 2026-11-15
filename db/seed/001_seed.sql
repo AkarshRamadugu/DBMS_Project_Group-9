@@ -77,6 +77,10 @@ VALUES
     (4,  'HDFCBANK',  'HDFC Bank Ltd',                     'STOCK', 'Banking',          1, 0.05, 1, 'ACTIVE'),
     (5,  'WIPRO',     'Wipro Ltd',                         'STOCK', 'IT',               1, 0.05, 1, 'ACTIVE'),
 -- ---- 3b. NIFTY Index (underlying for options) --------------------------------
+-- NOTE: NIFTY is typed as 'STOCK' because the schema's instrument_type CHECK
+--       only allows STOCK/BOND/OPTION. An index has no separate subtype table;
+--       classifying it as STOCK lets it participate in price_bar and option
+--       underlying references without schema changes.
     (6,  'NIFTY',     'NIFTY 50 Index',                    'STOCK', 'Index',            1, 0.05, 1, 'ACTIVE'),
 -- ---- 3c. GOI Bonds (multiplier = face_value/100 = 10000/100 = 100) ----------
     (7,  'GOI_2030',  'Govt of India 7.26% 2030',          'BOND',  'Government',     100, 0.01, 1, 'ACTIVE'),

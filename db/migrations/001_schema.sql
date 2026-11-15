@@ -148,16 +148,18 @@ CREATE TABLE IF NOT EXISTS price_bar (
                                    REFERENCES instrument (instrument_id)
                                    ON DELETE CASCADE,
     trade_date     DATE         NOT NULL,
-    open           NUMERIC(20, 6) NOT NULL CHECK (open  > 0),
-    high           NUMERIC(20, 6) NOT NULL CHECK (high  > 0),
-    low            NUMERIC(20, 6) NOT NULL CHECK (low   > 0),
-    close          NUMERIC(20, 6) NOT NULL CHECK (close > 0),
+    open           NUMERIC(20, 6) NOT NULL,
+    high           NUMERIC(20, 6) NOT NULL,
+    low            NUMERIC(20, 6) NOT NULL,
+    close          NUMERIC(20, 6) NOT NULL,
     volume         BIGINT       NOT NULL DEFAULT 0,
 
     CONSTRAINT pk_price_bar         PRIMARY KEY (instrument_id, trade_date),
     CONSTRAINT chk_price_bar_hl     CHECK (high >= low),
     CONSTRAINT chk_price_bar_open   CHECK (open  > 0),
-    CONSTRAINT chk_price_bar_close  CHECK (close > 0)
+    CONSTRAINT chk_price_bar_close  CHECK (close > 0),
+    CONSTRAINT chk_price_bar_high   CHECK (high  > 0),
+    CONSTRAINT chk_price_bar_low    CHECK (low   > 0)
 );
 
 COMMENT ON TABLE price_bar IS 'Daily OHLCV bars — weak entity identified by (instrument_id, trade_date).';

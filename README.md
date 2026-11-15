@@ -18,15 +18,21 @@ docker compose up -d --build
 | FastAPI (REST + docs) | http://localhost:8000/docs |
 | PostgreSQL | localhost:5432 (`db: paper_trading`, `user: trader`, `password: changeme`) |
 
-The database is initialized and seeded automatically on first run (3 users, 10 instruments, 10 days of OHLCV, initial positions).
+The database is initialized and seeded automatically on first run (3 users, 10 instruments, 10 days of OHLCV per instrument, initial positions). After running `seed_prices.py` the total row count exceeds 1,300 (well above the 500-record requirement).
 
 To seed 252 trading days of price bars (for >500 rows and 30-day rolling returns) and run the 7 standalone SQL queries:
 
-```bash
-# Seed 252 days of OHLCV bars via the backend container (works in PowerShell & Bash)
-cat scripts/seed_prices.py | docker compose exec -T backend python -
+```powershell
+# PowerShell — seed 252 days of OHLCV bars via the backend container
+Get-Content scripts/seed_prices.py | docker compose exec -T backend python -
 
-# Run the 7 analytical queries directly in PostgreSQL
+# PowerShell — run the 7 analytical queries directly in PostgreSQL
+Get-Content db/queries/001_analytical_queries.sql | docker compose exec -T postgres psql -U trader -d paper_trading
+```
+
+```bash
+# Bash / Git Bash equivalent
+cat scripts/seed_prices.py | docker compose exec -T backend python -
 cat db/queries/001_analytical_queries.sql | docker compose exec -T postgres psql -U trader -d paper_trading
 ```
 
@@ -182,7 +188,7 @@ Then open a Pull Request into `main` on GitHub (or run `git pull --rebase origin
 
 ## Running Without Docker
 
-```bash
+```powershell
 # 1. Start PostgreSQL 16 locally, then:
 psql -d paper_trading -f db/migrations/001_schema.sql
 psql -d paper_trading -f db/triggers/001_triggers.sql
@@ -192,16 +198,16 @@ psql -d paper_trading -f db/views/001_views.sql
 psql -d paper_trading -f db/seed/001_seed.sql
 
 # 2. Backend
-cd backend && cp .env.example .env   # edit credentials
+Set-Location backend; Copy-Item .env.example .env   # edit credentials
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 
 # 3. Frontend (new terminal)
-cd frontend
+Set-Location frontend
 pip install -r requirements.txt
 streamlit run app.py
 
-# 4. Seed 252 trading days of synthetic price data (needed for 30-day rolling returns & 500+ rows)
+# 4. Seed 252 trading days of synthetic price data for stocks (needed for 30-day rolling returns & 500+ rows)
 python scripts/seed_prices.py
 
 # 5. (Optional) Run the 7 analytical SQL queries directly in psql
@@ -210,6 +216,28 @@ psql -d paper_trading -f db/queries/001_analytical_queries.sql
 # 6. (Optional) Concurrency stress test
 python scripts/run_stress_test.py
 ```
+
+---
+
+## Final Submission
+
+| Item | Value |
+|---|---|
+| **Submission deadline** | Sunday, 15 November 2026, 11:59 PM |
+| **Demo dates** | 17–19 November 2026 (respective lab sessions) |
+| **Final commit hash** | _(run `git rev-parse HEAD` after tagging and paste here)_ |
+| **GitHub repo** | https://github.com/AkarshRamadugu/DBMS_Project_Group-9 |
+
+### Tagging the final commit
+
+After the last push before the deadline, tag and push the tag:
+
+```powershell
+git tag final
+git push origin final
+```
+
+Then record `git rev-parse HEAD` in this table and in the Demo Sheet PDF.
 
 ---
 
