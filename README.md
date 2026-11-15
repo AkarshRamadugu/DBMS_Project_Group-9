@@ -98,6 +98,7 @@ Get-Content scripts/demo_concurrent_orders.py | docker compose exec -T backend p
 
 ```
 project/
+├── Design_Document/                     # Final Database Design Document (PDF, 5 pages)
 ├── Midsem/                              # Mid-semester report, ER & schema diagrams
 ├── db/
 │   ├── migrations/001_schema.sql        # 12-relation DDL, all constraints & indexes
@@ -279,6 +280,7 @@ python scripts/run_stress_test.py
 | **Demo dates** | 17–19 November 2026 (respective lab sessions) |
 | **Final commit hash** | `8f8f9196a032339803fc58baf060173cdaee85a3` (tag: `final`) |
 | **GitHub repo** | https://github.com/AkarshRamadugu/DBMS_Project_Group-9 |
+| **Design document** | [`Design_Document/Database_Design_Document_Group9.pdf`](Design_Document/Database_Design_Document_Group9.pdf) |
 
 ### Tagging the final commit
 
