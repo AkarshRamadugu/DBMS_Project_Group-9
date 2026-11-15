@@ -120,7 +120,7 @@ ORDER BY realized_pnl DESC;
 
 -- -----------------------------------------------------------------------------
 -- QUERY 4: Rolling 30-Day Return & Max Drawdown (Endpoint: GET /analytics/rolling-returns/{instrument_id})
--- SQL concepts: CTE, Window Functions (LAG, MIN OVER, MAX OVER with ROWS BETWEEN frame)
+-- SQL concepts: CTEs, Window Functions (LAG, MAX OVER running peak, MIN OVER with ROWS BETWEEN frame)
 -- Example: instrument_id = 1 (RELIANCE)
 -- -----------------------------------------------------------------------------
 WITH daily AS (
@@ -135,9 +135,23 @@ WITH daily AS (
         MAX(close)     OVER (
             ORDER BY trade_date
             ROWS BETWEEN 29 PRECEDING AND CURRENT ROW
-        )                                         AS rolling_30d_max
+        )                                         AS rolling_30d_max,
+        -- Highest close seen up to and including today (peak for drawdown)
+        MAX(close)     OVER (
+            ORDER BY trade_date
+            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+        )                                         AS running_peak
     FROM price_bar
     WHERE instrument_id = 1
+),
+with_drawdown AS (
+    SELECT
+        *,
+        CASE
+            WHEN running_peak > 0
+            THEN (close - running_peak) / running_peak * 100
+        END                                       AS drawdown_pct
+    FROM daily
 )
 SELECT
     trade_date,
@@ -149,11 +163,12 @@ SELECT
     END                                           AS rolling_30d_return_pct,
     rolling_30d_min,
     rolling_30d_max,
-    CASE
-        WHEN rolling_30d_max IS NOT NULL AND rolling_30d_max <> 0
-        THEN ROUND(((rolling_30d_min - rolling_30d_max) / rolling_30d_max * 100)::NUMERIC, 4)
-    END                                           AS max_drawdown_pct
-FROM daily
+    -- Worst peak-to-trough decline observed inside the trailing 30-row window
+    ROUND(MIN(drawdown_pct) OVER (
+        ORDER BY trade_date
+        ROWS BETWEEN 29 PRECEDING AND CURRENT ROW
+    )::NUMERIC, 4)                                AS max_drawdown_pct
+FROM with_drawdown
 ORDER BY trade_date;
 
 
