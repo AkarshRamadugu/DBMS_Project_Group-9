@@ -57,10 +57,11 @@ def instrument_picker(instruments, key: str, label: str = "Instrument", active_o
     def _sync():
         st.session_state["sel_iid"] = st.session_state[key]
 
+    if st.session_state.get(key) not in by_id:
+        st.session_state[key] = current
     st.selectbox(
         label,
         ids,
-        index=ids.index(current),
         format_func=lambda i: f"{by_id[i]['symbol']}  ·  {by_id[i]['name']}  ·  {by_id[i]['instrument_type']}",
         key=key,
         on_change=_sync,
