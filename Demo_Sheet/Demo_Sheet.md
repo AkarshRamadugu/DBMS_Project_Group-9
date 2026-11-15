@@ -1,5 +1,4 @@
-# DBMS Project — Demo Sheet
-**Complete before the lab demo. Submit as a single-page PDF.**
+# DBMS Project — Demo Sheet · Paper-Trading Exchange (Group 9)
 
 ---
 
@@ -10,7 +9,7 @@
 | **Team ID / Lab section** | Group 9 |
 | **Members** | Devansh Rupesh Anadkat (2024ADPS0198H), Akarsh Ramadugu (2024ADPS0196H), Shashank Bodala (2024ADPS0186H), Druhin Sourya Datta Bommisetti (2024ADPS0182H), Hakimkari Sathvika (2024ADPS0192H) |
 | **GitHub repository** | https://github.com/AkarshRamadugu/DBMS_Project_Group-9 |
-| **Final commit hash** | `830a4c42c364b88f72fe6c8a0db5711e758ff3ca` (tag: `final`) |
+| **Final commit hash** | see git tag `final` (hash recorded in the next commit) |
 | **RDBMS & stack** | PostgreSQL 16 · FastAPI (Python, psycopg3) · Streamlit · Docker Compose |
 | **Number of tables** | 12 |
 | **Total database records** | ≈ 1,380 on a fresh setup (168 seed rows; `seed_prices.py` then brings `price_bar` to 1,310 rows: 252 trading days for 5 stocks); grows with every order, trade and audit entry |
