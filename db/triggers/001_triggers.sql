@@ -309,10 +309,12 @@ DECLARE
     v_new_status   TEXT;
     v_buy_order_id  BIGINT;
     v_sell_order_id BIGINT;
+    v_trade_qty     INTEGER;
+    v_trade_price   NUMERIC;
 BEGIN
     -- ---- Integrity check: order_id must be a leg of trade_id ----------------
-    SELECT buy_order_id, sell_order_id
-      INTO v_buy_order_id, v_sell_order_id
+    SELECT buy_order_id, sell_order_id, qty, price
+      INTO v_buy_order_id, v_sell_order_id, v_trade_qty, v_trade_price
       FROM trade
      WHERE trade_id = NEW.trade_id;
 
@@ -324,6 +326,13 @@ BEGIN
         RAISE EXCEPTION
             'Fill sync: order_id % is not a leg (buy=%, sell=%) of trade_id %.',
             NEW.order_id, v_buy_order_id, v_sell_order_id, NEW.trade_id
+            USING ERRCODE = 'integrity_constraint_violation';
+    END IF;
+
+    -- order_fill.qty/price are a controlled copy of trade.qty/price (FD trade_id -> qty, price):
+    IF NEW.qty <> v_trade_qty OR NEW.price <> v_trade_price THEN
+        RAISE EXCEPTION 'Fill sync: fill qty/price (%/%) differ from trade % (%/%).',
+            NEW.qty, NEW.price, NEW.trade_id, v_trade_qty, v_trade_price
             USING ERRCODE = 'integrity_constraint_violation';
     END IF;
 

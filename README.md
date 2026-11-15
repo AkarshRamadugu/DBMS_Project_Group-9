@@ -139,7 +139,16 @@ project/
 
 ## Database Schema
 
-12 relations, 16 foreign keys, all in BCNF.
+12 relations, 16 foreign keys. Every relation is in BCNF over its base attributes. A few **derived** values are stored on purpose (controlled denormalization), each kept consistent inside the same transaction:
+
+| Stored value | Derivable from | FD it adds | How consistency is guaranteed |
+|---|---|---|---|
+| `account.cash_balance` | SUM of `cash_ledger.amount` | — (aggregate) | updated in the settlement transaction; `chk_account_cash_balance` |
+| `trade_order.filled_qty`, `status` | SUM of `order_fill.qty` | — (aggregate) | recomputed by `trg_fill_qty_sync` |
+| `position.qty`, `avg_cost` | the account's trades | — (aggregate) | upserted in the settlement transaction under `FOR UPDATE` |
+| `order_fill.qty`, `price`, `filled_at` | the parent `trade` row | `trade_id → qty, price` | written with the trade in `match_and_settle`; `trg_fill_qty_sync` rejects a fill whose qty/price differ from its trade |
+
+`scripts/run_stress_test.py` and `scripts/demo_concurrent_orders.py` check these invariants after concurrent load.
 
 | Relation | PK | Notes |
 |---|---|---|
