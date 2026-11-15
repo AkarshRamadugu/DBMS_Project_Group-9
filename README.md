@@ -278,7 +278,7 @@ python scripts/run_stress_test.py
 |---|---|
 | **Submission deadline** | Sunday, 15 November 2026, 11:59 PM |
 | **Demo dates** | 17–19 November 2026 (respective lab sessions) |
-| **Final commit hash** | `8f8f9196a032339803fc58baf060173cdaee85a3` (tag: `final`) |
+| **Final commit hash** | `854c38efdfe95e4caef5aeb707850cde7f6edacd` (tag: `final`) |
 | **GitHub repo** | https://github.com/AkarshRamadugu/DBMS_Project_Group-9 |
 | **Design document** | [`Design_Document/Database_Design_Document_Group9.pdf`](Design_Document/Database_Design_Document_Group9.pdf) |
 
