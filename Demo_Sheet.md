@@ -10,7 +10,7 @@
 | **Team ID / Lab section** | Group 9 |
 | **Members** | Devansh Rupesh Anadkat (2024ADPS0198H), Akarsh Ramadugu (2024ADPS0196H), Shashank Bodala (2024ADPS0186H), Druhin Sourya Datta Bommisetti (2024ADPS0182H), Hakimkari Sathvika (2024ADPS0192H) |
 | **GitHub repository** | https://github.com/AkarshRamadugu/DBMS_Project_Group-9 |
-| **Final commit hash** | `94fd473d5b7602adc9dd17dee80e6f4660eec197` (tag: `final`) |
+| **Final commit hash** | `035836193baae7623ad2515fe9a1ffe22a58b192` (tag: `final`) |
 | **RDBMS & stack** | PostgreSQL 16 · FastAPI (Python, psycopg3) · Streamlit · Docker Compose |
 | **Number of tables** | 12 |
 | **Total database records** | ≈ 1,380 on a fresh setup (168 seed rows + 1,260 synthetic price bars from `seed_prices.py`); grows with every order, trade and audit entry |
