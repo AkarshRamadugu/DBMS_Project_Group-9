@@ -313,7 +313,22 @@ COMMENT ON COLUMN audit_log.new_values IS 'row_to_json(NEW) cast to JSONB — NU
 
 
 -- ===========================================================================
--- INDEXES
+-- INDEX STRATEGY
+-- ---------------------------------------------------------------------------
+-- Two query-driven indexes support the analytical workload in
+-- db/queries/001_analytical_queries.sql:
+--
+--   1. idx_trade_order_book  — PARTIAL index (predicate: status IN OPEN/PARTIAL)
+--      Serves Query 1 (order-book depth) and order_book_view. The predicate
+--      keeps the index small because filled/cancelled orders are excluded,
+--      while (instrument_id, side, price, created_at) covers the equality
+--      filters plus best-price-first ordering and the price-time tie-break.
+--
+--   2. idx_price_bar_latest  — regular composite index in DESC order (NOT partial)
+--      Serves latest-close lookups in Query 2 (DISTINCT ON), Query 4
+--      (ROLLING window), Query 6 (LATERAL subquery) and Query 7 (LATERAL join).
+--      It provides a dedicated descending path for
+--      "WHERE instrument_id = ? ORDER BY trade_date DESC LIMIT 1".
 -- ===========================================================================
 
 -- Partial index on trade_order for order-book lookups (open/partial orders only)
@@ -328,7 +343,7 @@ COMMENT ON INDEX idx_trade_order_book IS 'Partial index for fast order-book scan
 CREATE INDEX IF NOT EXISTS idx_price_bar_latest
     ON price_bar (instrument_id, trade_date DESC);
 
-COMMENT ON INDEX idx_price_bar_latest IS 'Covers "SELECT ... ORDER BY trade_date DESC LIMIT 1" per instrument.';
+COMMENT ON INDEX idx_price_bar_latest IS 'Regular (non-partial) DESC index covering "SELECT ... ORDER BY trade_date DESC LIMIT 1" per instrument.';
 
 -- Supporting indexes for common FK-join patterns
 CREATE INDEX IF NOT EXISTS idx_account_user       ON account      (user_id);
