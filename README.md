@@ -86,6 +86,12 @@ The trading account is chosen in the sidebar (the house / market-maker account i
 
 Many clients can submit orders simultaneously. Each order runs in its own SERIALIZABLE transaction with row locks; the API hands incoming orders to the matching engine one at a time (like a real exchange's sequential matcher, which price-time priority requires), so two matches can never lock the same accounts in opposite order. Serialization failures and deadlocks caused by other writers (cancels, deposits) are retried automatically. `scripts/run_stress_test.py` (10–20 threads, hundreds of orders) verifies cash-ledger, fill-quantity and non-negative-position invariants afterwards.
 
+Live demo of simultaneous orders (12 buyers hit one 50-unit SELL order at the same instant; exactly 50 units fill, the rest rest in the book, invariants are checked):
+
+```powershell
+Get-Content scripts/demo_concurrent_orders.py | docker compose exec -T backend python -
+```
+
 ---
 
 ## Project Structure
@@ -124,6 +130,7 @@ project/
 │   └── requirements.txt
 ├── scripts/
 │   ├── seed_prices.py                  # GBM synthetic OHLCV or NSE bhavcopy CSV
+│   ├── demo_concurrent_orders.py       # Live demo: simultaneous orders on one SELL order
 │   └── run_stress_test.py              # 10-thread concurrency + invariant checks
 └── docker-compose.yml
 ```
