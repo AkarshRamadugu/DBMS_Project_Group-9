@@ -12,6 +12,8 @@ async def order_book_depth(instrument_id: int):
     Query 1: Order book depth with running total.
     Aggregates open orders by instrument, side, and price level,
     computing cumulative quantity using a window function (running sum).
+    Rows are returned best-price-first per side so the running total is
+    monotonic when read from top to bottom.
     """
     try:
         async with get_conn() as conn:
@@ -25,22 +27,36 @@ async def order_book_depth(instrument_id: int):
 
                 await cur.execute(
                     """
+                    WITH price_levels AS (
+                        SELECT
+                            side,
+                            price,
+                            SUM(qty - filled_qty)                                   AS level_qty,
+                            COUNT(*)                                                AS order_count
+                        FROM trade_order
+                        WHERE instrument_id = %s
+                          AND status IN ('OPEN', 'PARTIAL')
+                        GROUP BY side, price
+                    )
                     SELECT
                         side,
                         price,
-                        SUM(qty - filled_qty)                                       AS level_qty,
-                        COUNT(*)                                                     AS order_count,
-                        SUM(SUM(qty - filled_qty)) OVER (
+                        level_qty,
+                        order_count,
+                        -- Running total within each side, best-price-first:
+                        -- BUY = highest bid first (price DESC), SELL = lowest ask first (price ASC).
+                        SUM(level_qty) OVER (
                             PARTITION BY side
                             ORDER BY
                                 CASE WHEN side = 'BUY'  THEN price END DESC,
                                 CASE WHEN side = 'SELL' THEN price END ASC
                         )                                                            AS cumulative_qty
-                    FROM trade_order
-                    WHERE instrument_id = %s
-                      AND status IN ('OPEN', 'PARTIAL')
-                    GROUP BY side, price
-                    ORDER BY side DESC, price DESC
+                    FROM price_levels
+                    -- Match the window order so the cumulative column reads top-to-bottom.
+                    ORDER BY
+                        side DESC,
+                        CASE WHEN side = 'BUY'  THEN price END DESC,
+                        CASE WHEN side = 'SELL' THEN price END ASC
                     """,
                     (instrument_id,),
                 )
